@@ -48,7 +48,9 @@ class RSSConnector(SourceConnector):
         root_name = local_name(root.tag)
         if root_name == "feed":
             return self._parse_atom(root)
-        return self._parse_rss(root)
+        if root_name in {"rss", "RDF"}:
+            return self._parse_rss(root)
+        raise MalformedContentError(f"Response from {self.source.name} is not an RSS or Atom feed")
 
     def _parse_rss(self, root: ET.Element) -> list[NewsItem]:
         channel = next((element for element in root.iter() if local_name(element.tag) == "channel"), root)

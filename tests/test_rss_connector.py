@@ -55,6 +55,19 @@ def test_malformed_feed_is_reported() -> None:
         fetch_payload(b"<rss><channel>")
 
 
+def test_well_formed_non_feed_xml_is_reported_as_malformed() -> None:
+    with pytest.raises(MalformedContentError):
+        fetch_payload(b"<html><body>upstream error page</body></html>")
+
+
+def test_rss_entry_missing_title_is_skipped() -> None:
+    items = fetch_payload(b"""<rss><channel>
+<item><title>Valid</title><link>https://example.com/valid</link></item>
+<item><link>https://example.com/untitled</link></item>
+</channel></rss>""")
+    assert [item.title for item in items] == ["Valid"]
+
+
 def test_retryable_status_is_retried() -> None:
     attempts = 0
 

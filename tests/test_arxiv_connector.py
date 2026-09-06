@@ -54,6 +54,16 @@ def test_malformed_arxiv_response_is_reported() -> None:
         fetch_payload(b"<feed><entry>")
 
 
+@pytest.mark.parametrize("status", [400, 404, 429, 500])
+def test_arxiv_http_errors_are_reported(status: int) -> None:
+    async def run() -> None:
+        transport = httpx.MockTransport(lambda request: httpx.Response(status))
+        async with httpx.AsyncClient(transport=transport) as client:
+            await ArxivConnector(source(), client, retry_attempts=1).fetch()
+    with pytest.raises(FetchError):
+        asyncio.run(run())
+
+
 def test_duplicate_arxiv_paper_is_idempotent(db_session) -> None:
     source_record = SourceRepository(db_session).create(source())
     paper, _ = fetch_payload(ARXIV_FEED)
