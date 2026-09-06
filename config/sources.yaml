@@ -1,0 +1,2 @@
+# Source configuration is intentionally declarative. Connectors are added later.
+sources: []
